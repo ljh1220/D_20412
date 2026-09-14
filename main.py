@@ -1,3 +1,4 @@
+import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
 import streamlit as st
@@ -121,7 +122,7 @@ top5_long_run_movies = (
 # 4) 상위 5개 영화 데이터 필터링
 top5_df = df[df["영화명"].isin(top5_long_run_movies)]
 
-# 5) 다중 선그래프 생성 (color="영화명"으로 각 영화별 색상 및 범례 생성)
+# 5) 다중 선그래프 생성
 fig_top5_comparison = px.line(
     top5_df,
     x="기준일자",
@@ -142,3 +143,58 @@ st.plotly_chart(fig_top5_comparison, use_container_width=True)
 
 # 그래프 설명문
 st.caption("💡 **이 그래프로 알 수 있는 것:** 박스오피스 TOP 10에 최소 20일 이상 머무르며 꾸준히 흥행(장기 집권)을 이어간 주요 상위 5개 영화의 관객 증가 양상과 장기 흥행 패턴을 비교할 수 있습니다.")
+
+st.markdown("---")
+
+# -------------------------------------------------------------------
+# [구역 4] 전체 박스오피스 일별 총관객수 및 7일 이동평균선
+# -------------------------------------------------------------------
+st.header("📌 4. 전체 박스오피스 일별 관객수 흐름 및 7일 이동평균선")
+
+# 1) 기준일자별 TOP10 영화의 '해당일관객수' 전체 합계 계산
+daily_total_df = (
+    df.groupby("기준일자")["해당일관객수"].sum().reset_index()
+)
+
+# 2) 7일 이동평균(Moving Average) 컬럼 생성
+daily_total_df["7일_이동평균"] = daily_total_df["해당일관객수"].rolling(window=7).mean()
+
+# 3) Plotly Figure 생성
+fig_ma = go.Figure()
+
+# 원본 일별 총 관객수 선 (연하게 표시)
+fig_ma.add_trace(
+    go.Scatter(
+        x=daily_total_df["기준일자"],
+        y=daily_total_df["해당일관객수"],
+        mode="lines",
+        name="일별 총관객수 (원본)",
+        line=dict(color="rgba(150, 150, 150, 0.4)", width=1.5),  # 연한 회색/투명도
+    )
+)
+
+# 7일 이동평균선 (진하게 표시)
+fig_ma.add_trace(
+    go.Scatter(
+        x=daily_total_df["기준일자"],
+        y=daily_total_df["7일_이동평균"],
+        mode="lines",
+        name="7일 이동평균선",
+        line=dict(color="#FF4B4B", width=3),  # 진하고 두꺼운 빨간색 선
+    )
+)
+
+# 레이아웃 설정
+fig_ma.update_layout(
+    title="전체 박스오피스 일별 총관객수 및 7일 이동평균 추이",
+    xaxis_title="날짜",
+    yaxis_title="총 관객수(명)",
+    hovermode="x unified",
+    legend=dict(x=0.01, y=0.99),
+)
+
+# 화면에 출력
+st.plotly_chart(fig_ma, use_container_width=True)
+
+# 그래프 설명문
+st.caption("💡 **이 그래프로 알 수 있는 것:** 주말과 평일 간 극심한 요일별 변동성을 제거하여, 극장가 전체 시장 규모의 전반적인 상승·하락 흐름(시즌별 성수기 및 비수기 패턴)을 명확하게 파악할 수 있습니다.")
