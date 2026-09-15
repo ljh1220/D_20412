@@ -237,3 +237,62 @@ st.plotly_chart(fig_monthly_bar, use_container_width=True)
 
 # 그래프 설명문
 st.caption("💡 **이 그래프로 알 수 있는 것:** 월별 총 관객 수의 전반적인 분포를 통해 연중 극장가의 최대 성수기 월(여름휴가철, 명절 등)과 비수기 월을 직관적으로 비교·분석할 수 있습니다.")
+
+st.markdown("---")
+
+# -------------------------------------------------------------------
+# [구역 6] 캘린더 히트맵 (주차별 x 요일별 관객수)
+# -------------------------------------------------------------------
+st.header("📌 6. 캘린더 히트맵 (주차 × 요일 관객수)")
+
+# 1) 히트맵 전용 컬럼 생성
+cal_df = daily_total_df.copy()
+
+# 요일 (월요일=0, 일요일=6) 및 요일명 설정 (월~일 순서 지정)
+weekday_names = ["월", "화", "수", "목", "금", "토", "일"]
+cal_df["요일_num"] = cal_df["기준일자"].dt.weekday
+cal_df["요일"] = cal_df["요일_num"].apply(lambda x: weekday_names[x])
+
+# 연도 및 주차(ISO Week Number)
+cal_df["연도"] = cal_df["기준일자"].dt.isocalendar().year
+cal_df["주차"] = cal_df["기준일자"].dt.isocalendar().week
+cal_df["주차_label"] = cal_df["연도"].astype(str) + "년 " + cal_df["주차"].astype(str) + "주차"
+
+# 마우스 툴팁용 날짜 문자열 (yyyy-mm-dd)
+cal_df["날짜_str"] = cal_df["기준일자"].dt.strftime("%Y-%m-%d")
+
+# 2) 피벗 테이블 작성 (행: 요일, 열: 주차 라벨, 값: 관객수 및 날짜)
+pivot_audience = cal_df.pivot(index="요일", columns="주차_label", values="해당일관객수")
+pivot_date = cal_df.pivot(index="요일", columns="주차_label", values="날짜_str")
+
+# 요일 순서를 월~일로 정렬
+pivot_audience = pivot_audience.reindex(weekday_names)
+pivot_date = pivot_date.reindex(weekday_names)
+
+# 3) Plotly imshow로 히트맵 생성
+fig_heatmap = px.imshow(
+    pivot_audience,
+    labels=dict(x="주차", y="요일", color="일 관객수(명)"),
+    x=pivot_audience.columns,
+    y=weekday_names,
+    color_continuous_scale="Reds",  # 색상이 진할수록 관객 수가 많음
+    title="주차별 × 요일별 일관객수 히트맵",
+)
+
+# 4) 마우스 오버(Hover) 시 yyyy-mm-dd 날짜와 관객수가 표시되도록 커스텀
+fig_heatmap.update_traces(
+    customdata=pivot_date.values,
+    hovertemplate="<b>날짜: %{customdata}</b><br>요일: %{y}<br>주차: %{x}<br>관객수: %{z:,}명<extra></extra>",
+)
+
+# 레이아웃 조정
+fig_heatmap.update_layout(
+    xaxis=dict(tickangle=-45),
+    height=450,
+)
+
+# 화면에 출력
+st.plotly_chart(fig_heatmap, use_container_width=True)
+
+# 그래프 설명문
+st.caption("💡 **이 그래프로 알 수 있는 것:** 연중 주차별·요일별 관객 밀집도를 한눈에 시각화하여, 특정 연휴/명절 주간이나 금·토·일 주말 대목의 흥행 파급력을 비교할 수 있습니다.")
