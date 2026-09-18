@@ -110,7 +110,6 @@ st.markdown("---")
 # ---------------------------------------------------------
 st.header("3. 총 관객 수(total_audi) 분포")
 
-# 히스토그램 생성
 fig_hist = px.histogram(
     df,
     x='total_audi',
@@ -132,10 +131,46 @@ fig_hist.update_layout(
 
 st.plotly_chart(fig_hist, use_container_width=True)
 
-# 최다 관객 영화 계산
 max_audi_movie = df.loc[df['total_audi'].idxmax()]
 max_movie_name = max_audi_movie['movieNm']
 max_movie_audi = max_audi_movie['total_audi']
 
 st.divider()
-st.info(f"💡 **이 그래프로 알 수 있는 것:** 대부분의 영화는 총 관객 수 200만 명 이하 구간에 밀집되어 있으며, 가장 관객이 많은 영화는 **'{max_movie_name}'** (총 {max_movie_audi:,.0f}명)입니다.")
+st.info(f"💡 **이 그래프로 알 수 있는 것:** 대부분의 영화는 총 관객 수 200만 명 이하(하위 구간)에 밀집되어 있는 롱테일 분포를 보이며, 가장 관객 수가 많은 영화는 **'{max_movie_name}'** (약 {max_movie_audi:,.0f}명)입니다.")
+
+st.markdown("---")
+
+# ---------------------------------------------------------
+# 네 번째 그래프: 개봉일 스크린수 vs 총 관객 수 (산점도)
+# ---------------------------------------------------------
+st.header("4. 개봉일 스크린수와 총 관객 수의 관계")
+
+fig_scatter = px.scatter(
+    df,
+    x='first_scrn',
+    y='total_audi',
+    color='genre_clean',
+    hover_name='movieNm',
+    title='개봉일 스크린수(first_scrn) vs 총 관객 수(total_audi)',
+    labels={
+        'first_scrn': '개봉일 스크린수',
+        'total_audi': '총 관객 수',
+        'genre_clean': '장르'
+    },
+    hover_data={'first_scrn': ':,', 'total_audi': ':,', 'genre_clean': True}
+)
+
+fig_scatter.update_traces(
+    hovertemplate='<b>영화명: %{hovertext}</b><br>장르: %{customdata[0]}<br>개봉일 스크린수: %{x:,.0f}개<br>총 관객 수: %{y:,.0f}명<extra></extra>'
+)
+
+fig_scatter.update_layout(
+    margin=dict(t=50, b=20, l=20, r=20),
+    xaxis_title="개봉일 스크린수 (개)",
+    yaxis_title="총 관객 수 (명)"
+)
+
+st.plotly_chart(fig_scatter, use_container_width=True)
+
+st.divider()
+st.info("💡 **이 그래프로 알 수 있는 것:** 개봉일 스크린수가 많을수록 총 관객 수가 증가하는 대체적인 양의 상관관계를 나타내지만, 동일한 스크린수 확보 대비 흥행 성과의 격차는 장르나 작품에 따라 크게 달라짐을 알 수 있습니다.")
