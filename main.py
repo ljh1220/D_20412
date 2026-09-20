@@ -182,7 +182,6 @@ st.markdown("---")
 # ---------------------------------------------------------
 st.header("5. 주요 장르별 총 관객 수 분포 (상자 그림)")
 
-# 영화가 10편 이상인 장르만 필터링
 genre_counts = df['genre_clean'].value_counts()
 top_genres = genre_counts[genre_counts >= 10].index
 df_filtered = df[df['genre_clean'].isin(top_genres)]
@@ -198,10 +197,9 @@ fig_box = px.box(
         'genre_clean': '장르',
         'total_audi': '총 관객 수'
     },
-    points='outliers'  # 이상치 점 표시
+    points='outliers'
 )
 
-# 상자 밖의 아웃라이어 점에 마우스를 올릴 때 영화명과 총 관객 수가 보이도록 설정
 fig_box.update_traces(
     hovertemplate='<b>영화명: %{hovertext}</b><br>총 관객 수: %{y:,.0f}명<extra></extra>'
 )
@@ -217,3 +215,43 @@ st.plotly_chart(fig_box, use_container_width=True)
 
 st.divider()
 st.info("💡 **이 그래프로 알 수 있는 것:** 영화 편수가 많은 주요 장르 간 관객 수의 중간값과 분산(격차)을 한눈에 비교할 수 있으며, 상자 밖의 아웃라이어 점들을 통해 특정 대흥행작(이상치)의 존재를 명확히 파악할 수 있습니다.")
+
+st.markdown("---")
+
+# ---------------------------------------------------------
+# 여섯 번째 그래프: 개봉일 스크린수 vs 총 관객 수 (첫 주 관객 수 크기의 버블 그래프)
+# ---------------------------------------------------------
+st.header("6. 스크린수, 총 관객 수 및 첫 주 관객 수 관계 (버블 그래프)")
+
+fig_bubble = px.scatter(
+    df,
+    x='first_scrn',
+    y='total_audi',
+    size='first_week_audi',
+    color='genre_clean',
+    hover_name='movieNm',
+    size_max=40,
+    title='개봉일 스크린수 vs 총 관객 수 (버블 크기: 개봉 첫 주 관객 수)',
+    labels={
+        'first_scrn': '개봉일 스크린수',
+        'total_audi': '총 관객 수',
+        'first_week_audi': '개봉 첫 주 관객 수',
+        'genre_clean': '장르'
+    },
+    hover_data={'first_scrn': ':,', 'total_audi': ':,', 'first_week_audi': ':,', 'genre_clean': True}
+)
+
+fig_bubble.update_traces(
+    hovertemplate='<b>영화명: %{hovertext}</b><br>장르: %{customdata[0]}<br>개봉일 스크린수: %{x:,.0f}개<br>총 관객 수: %{y:,.0f}명<br>첫 주 관객 수: %{customdata[1]:,.0f}명<extra></extra>'
+)
+
+fig_bubble.update_layout(
+    margin=dict(t=50, b=20, l=20, r=20),
+    xaxis_title="개봉일 스크린수 (개)",
+    yaxis_title="총 관객 수 (명)"
+)
+
+st.plotly_chart(fig_bubble, use_container_width=True)
+
+st.divider()
+st.info("💡 **이 그래프로 알 수 있는 것:** 개봉일 스크린수와 최종 총 관객 수의 관계에 더해 버블 크기(첫 주 관객 수)를 통해 초반 흥행 집객력이 최종 관객 수 형성에 얼마나 결정적인 영향을 미치는지 다차원적으로 파악할 수 있습니다.")
