@@ -266,7 +266,6 @@ st.markdown("---")
 # ---------------------------------------------------------
 st.header("7. 제작 국가 및 장르별 영화 편수 (선버스트 차트)")
 
-# 제작 국가와 장르별 편수를 집계
 nation_genre_df = df.groupby(['nation_clean', 'genre_clean']).size().reset_index(name='count')
 
 fig_sunburst = px.sunburst(
@@ -290,3 +289,44 @@ st.plotly_chart(fig_sunburst, use_container_width=True)
 
 st.divider()
 st.info("💡 **이 그래프로 알 수 있는 것:** 영화를 제작한 국가별 비중과 각 국가 내에서 주를 이루는 대표 장르의 구성비(영화 편수 기준)를 계층 구조로 손쉽게 파악할 수 있습니다.")
+
+st.markdown("---")
+
+# ---------------------------------------------------------
+# 여덟 번째 그래프: 제작 국가에 따라 평균 총 관객 수에 차이가 있을까 (막대그래프)
+# ---------------------------------------------------------
+st.header("8. 제작 국가별 평균 총 관객 수 비교")
+
+# 제작 국가별 평균 총 관객 수 집계
+avg_audi_by_nation = df.groupby('nation_clean')['total_audi'].mean().reset_index()
+avg_audi_by_nation.columns = ['nation', 'avg_total_audi']
+avg_audi_by_nation = avg_audi_by_nation.sort_values(by='avg_total_audi', ascending=False)
+
+fig_bar_nation = px.bar(
+    avg_audi_by_nation,
+    x='nation',
+    y='avg_total_audi',
+    color='nation',
+    title='제작 국가에 따라 평균 총 관객 수에 차이가 있을까',
+    labels={
+        'nation': '제작 국가',
+        'avg_total_audi': '평균 총 관객 수'
+    },
+    color_discrete_sequence=px.colors.qualitative.Set2
+)
+
+fig_bar_nation.update_traces(
+    hovertemplate='<b>국가명: %{x}</b><br>평균 관객 수: %{y:,.0f}명<extra></extra>'
+)
+
+fig_bar_nation.update_layout(
+    margin=dict(t=50, b=20, l=20, r=20),
+    xaxis_title="제작 국가",
+    yaxis_title="평균 총 관객 수 (명)",
+    showlegend=False
+)
+
+st.plotly_chart(fig_bar_nation, use_container_width=True)
+
+st.divider()
+st.info("💡 **이 그래프로 알 수 있는 것:** 제작 국가별 영화 1편당 평균 총 관객 수를 비교하여, 흥행 규모에서 국가간 유의미한 차이가 존재하는지 확인할 수 있습니다.")
