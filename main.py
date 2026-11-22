@@ -1,6 +1,7 @@
-streamlit>=1.35.0
+streamlit>=1.32.0
 pandas>=2.0.0
 numpy>=1.24.0
 scikit-learn>=1.3.0
 matplotlib>=3.7.0
-scipy>=1.10.0
+seaborn>=0.13.0
+scipy>=1.11.0
